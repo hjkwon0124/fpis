@@ -9,7 +9,8 @@ object main extends App{
   val evaltest1 = Stream(eval(1),eval(2),eval(3))
   val evaltest2:Stream[eval] = Stream.cons(eval(2),evaltest2)
 
-
+  val test = Stream.unfold(1)( x => Option(x,x*2))
+  println(test.take(5).toList)
 }
 
 

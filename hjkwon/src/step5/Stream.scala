@@ -54,4 +54,9 @@ object Stream {
   def apply[A](as: A*): Stream[A] =
     if (as.isEmpty) empty else cons(as.head,apply(as.tail: _*))
 
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+    f(z) match {
+      case Some((h,s)) => cons(h, unfold(s)(f))
+      case None => empty
+    }
 }

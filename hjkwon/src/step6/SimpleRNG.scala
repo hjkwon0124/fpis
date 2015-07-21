@@ -7,10 +7,12 @@ package step6
 
 trait RNG{
   def nextInt:(Int,RNG)
+
 }
 
 case class SimpleRNG(seed: Long) extends RNG{
   type Rand[+A] = RNG =>(A,RNG )
+  var hubtest = 1
 
   def nextInt:(Int,RNG) ={
     val newSeed = (seed * 0x5DEECE66DL +0xBL) & 0xFFFFFFFFFFFFL

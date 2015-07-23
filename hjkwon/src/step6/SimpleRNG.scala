@@ -12,7 +12,6 @@ trait RNG{
 
 case class SimpleRNG(seed: Long) extends RNG{
   type Rand[+A] = RNG =>(A,RNG )
-  var hubtest = 1
 
   def nextInt:(Int,RNG) ={
     val newSeed = (seed * 0x5DEECE66DL +0xBL) & 0xFFFFFFFFFFFFL
@@ -21,10 +20,7 @@ case class SimpleRNG(seed: Long) extends RNG{
     (n,nextRNG)
   }
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = {
-    val (i, r) = rng.nextInt
-    (if (i < 0) -(i + 1) else i, r)
-  }
+
 
   def ints(count: Int)(rng : RNG) : (List[Int],RNG)={
     if(count >0){
@@ -36,13 +32,6 @@ case class SimpleRNG(seed: Long) extends RNG{
       (Nil,rng)
   }
 
-  def map2[A,B,C](ra:Rand[A], rb:Rand[B])(f: (A,B) => C) : Rand[C]=
-    rng => {
-      val (a, rng1) = ra(rng)
-      val (b, rng2) = rb(rng1)
-      (f(a,b), rng2)
-    }
-
   def unit[A](a:A): Rand[A]=
   rng => (a,rng)
 
@@ -52,11 +41,40 @@ case class SimpleRNG(seed: Long) extends RNG{
   def _ints(count: Int): Rand[List[Int]] =
     sequence(List.fill(count)(rng => rng.nextInt))
 
+  def flatMap[A,B](s:Rand[A])(f:A => Rand[B]) : Rand[B] =
+    rng => {
+      val (a,rng1) = s(rng)
+      f(a)(rng1)
+    }
 
   def map[A,B](s:Rand[A])(f: A=>B): Rand[B] =
   rng =>{
     val (a,rng2) = s(rng)
     (f(a),rng2)
+  }
+
+  def _map[A,B](s:Rand[A])(f:A=>B):Rand[B] =
+  flatMap(s)(a=>unit(f(a)))
+
+  def map2[A,B,C](ra:Rand[A], rb:Rand[B])(f: (A,B) => C) : Rand[C]=
+    rng => {
+      val (a, rng1) = ra(rng)
+      val (b, rng2) = rb(rng1)
+      (f(a,b), rng2)
+    }
+
+  def _map2[A,B,C](ra:Rand[A], rb:Rand[B])(f: (A,B) => C) : Rand[C]=
+    flatMap(ra)( a=> map(rb)(b=> f(a,b)))
+
+
+
+
+
+
+
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i, r) = rng.nextInt
+    (if (i < 0) -(i + 1) else i, r)
   }
 
   def nonNegativeEven: Rand[Int] =
